@@ -57,26 +57,44 @@ class verifyChangeToken(APIView):
 
 
 class RegisterUserView(APIView):
-
+    
     def post(self, request):
         serializer = RegisterUserSerializer(data=request.data)
         data = {}
+        
         name = request.data['username']
         name = name.lower()
+        print(request.data)
         if (User.objects.filter(username=name).count())>0:
-            return Response({'status':status.HTTP_400_BAD_REQUEST,'data': 'Username Already Exists'})
+           
+            return Response({'status':status.HTTP_400_BAD_REQUEST,'msg': {'username': 'Username Already Exists'}})
+
         if (User.objects.filter(email=request.data['email']).count())>0:
-            return Response({'status':status.HTTP_400_BAD_REQUEST,'data': 'This Email Is Already Being Used'})
+            return Response({'status':status.HTTP_400_BAD_REQUEST,'msg': {'email': 'This Email Is Already Being Used'}})
+
         if serializer.is_valid():
-            user = serializer.save()
+            
+            user = User.objects.create_user(
+                username=name.lower(),
+                password=request.data['password'],
+                email=request.data['email'],
+                first_name=request.data['first_name'],
+                last_name=request.data['last_name']
+                )
+            
+            
+            
+            user.save()
             data['status'] = status.HTTP_201_CREATED
             data['data'] = {
                 'token': Token.objects.get(user=user).key,
                 'info': serializer.data,
             }
+            data['msg'] = 'You are Successfully Registered'
         else:
+            
             data['status'] = status.HTTP_400_BAD_REQUEST
-            data['data'] = serializer.errors
+            data['msg'] = serializer.errors
         return Response(data)
 
 

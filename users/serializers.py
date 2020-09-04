@@ -16,29 +16,11 @@ class verifySerializer(serializers.ModelSerializer):
 
 
 class RegisterUserSerializer(serializers.ModelSerializer):
-    password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True)
-
     class Meta:
         model = User
-        fields = ['username', 'email', 'password', 'password2']
-        extra_kwargs = {
-            'password': {'write_only': True}
-        }
-
-    def save(self, **kwargs):
-        name = self.validated_data['username']
-        user = User(
-            username=name.lower(),
-            email=self.validated_data['email'],
-        )
+        fields = ['first_name','last_name','username', 'email', 'password']
         
-        password = self.validated_data['password']
-        password2 = self.validated_data['password2']
-        if password != password2:
-            raise serializers.ValidationError({'status':status.HTTP_400_BAD_REQUEST,'data': 'Passwords do not match'})
-        user.set_password(password)
-        user.save()
-        return user
+    
 
 
 
