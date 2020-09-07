@@ -20,11 +20,11 @@ class AuthToken(ObtainAuthToken):
         data={}
         serializer = self.serializer_class(data=request.data,
                                            context={'request': request})
-        
         if serializer.is_valid():
             user = serializer.validated_data['user']
             token, created = Token.objects.get_or_create(user=user)
             data['status'] = status.HTTP_200_OK
+            data['msg'] = "You are Successfully Loggedin"
             data['data'] = {}
             data['data']['token'] = token.key
             data['data']['user_id'] = user.pk
@@ -33,7 +33,7 @@ class AuthToken(ObtainAuthToken):
 
             return Response(data)
         else :
-            return Response({"data":'Unable To Login With Provided Credentials','status':status.HTTP_400_BAD_REQUEST})
+            return Response({"msg":'Unable To Login With Provided Credentials','status':status.HTTP_400_BAD_REQUEST})
 
 class verifyChangeToken(APIView):
     
@@ -64,7 +64,7 @@ class RegisterUserView(APIView):
         
         name = request.data['username']
         name = name.lower()
-        print(request.data)
+     
         if (User.objects.filter(username=name).count())>0:
            
             return Response({'status':status.HTTP_400_BAD_REQUEST,'msg': {'username': 'Username Already Exists'}})
@@ -85,12 +85,13 @@ class RegisterUserView(APIView):
             
             
             user.save()
+            token, created = Token.objects.get_or_create(user=user)
+            data['token'] = token.key
             data['status'] = status.HTTP_201_CREATED
-            data['data'] = {
-                'token': Token.objects.get(user=user).key,
-                'info': serializer.data,
-            }
+            data['data'] =serializer.data
+            data['data']['user_id'] = user.pk
             data['msg'] = 'You are Successfully Registered'
+            print(data)
         else:
             
             data['status'] = status.HTTP_400_BAD_REQUEST
